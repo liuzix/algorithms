@@ -104,4 +104,6 @@ int main () {
         points[i].next = &points[(i+1) % n];
     }
 
+    unordered_set<Point*, PointHash, PointComp> criticals;
+
 }
