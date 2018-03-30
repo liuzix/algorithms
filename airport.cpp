@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <algorithm>
 #include <unordered_set>
 
 using namespace std;
@@ -71,20 +72,28 @@ vec2 intersection(vec2 p1, vec2 p2, vec2 p3, vec2 p4) {
     return vec2(xnom/denom, ynom/denom);
 }
 
-vector<Point> allIntersection(Point p1, Point p2,
+inline bool isBetween(vec2 v1, vec2 v2, vec2 v3) {
+    if (v3 == v1 || v3 == v2) return true;
+    if (v1 < v3 && v3 < v2) return true;
+    if (v2 < v3 && v3 < v1) return true;
+    return false;
+}
+
+vector<vec2> allIntersection(Point p1, Point p2,
                               unordered_set<Point*, PointHash, PointComp>& criticals,
                               Point* start) {
     vector<vec2> ret;
     Point* cur = start;
     while (cur != start) {
         vec2 ipoint = intersection(p1.v, p2.v, cur->v, cur->next->v);
-        if (ipoint.isInf()) {
-            cur = cur->next;
-        } else {
+        if (!ipoint.isInf() && isBetween(cur->v, cur->next->v, ipoint)) {
             ret.push_back(ipoint);
-            cur = cur->next;
         }
+        cur = cur->next;
     }
+
+    sort(ret.begin(), ret.end());
+    return ret;
 }
 
 
@@ -103,5 +112,7 @@ int main () {
         points[i].prev = &points[(i-1) % n];
         points[i].next = &points[(i+1) % n];
     }
+
+    
 
 }
