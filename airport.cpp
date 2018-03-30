@@ -3,6 +3,8 @@
 #include <cmath>
 #include <algorithm>
 #include <unordered_set>
+#include <csignal>
+#include <iomanip>      // std::setprecision
 
 using namespace std;
 
@@ -13,6 +15,9 @@ struct vec2 {
     vec2 (double _x, double _y) : x(_x), y(_y) { }
     bool isInf() const {
         return isinf(x) || isinf(y);
+    }
+    double length() const {
+        return sqrt(x * x + y * y);
     }
 };
 
@@ -36,6 +41,7 @@ struct Point {
     Point* next;
     Point* prev;
     bool critical = false;
+    bool semiCritical = false;
     Point (double x, double y) : v(x, y) {}
 };
 
@@ -79,9 +85,7 @@ inline bool isBetween(vec2 v1, vec2 v2, vec2 v3) {
     return false;
 }
 
-vector<vec2> allIntersection(Point p1, Point p2,
-                              unordered_set<Point*, PointHash, PointComp>& criticals,
-                              Point* start) {
+vector<vec2> allIntersection(Point p1, Point p2, Point* start) {
     vector<vec2> ret;
     Point* cur = nullptr;
     while (cur != start) {
@@ -93,9 +97,20 @@ vector<vec2> allIntersection(Point p1, Point p2,
         cur = cur->next;
     }
 
+    if (abs((p1.v - p2.v).length() - 76.157731059) <= ERR) {
+        cout << "gwa!" << endl;
+    }
     sort(ret.begin(), ret.end());
     return ret;
 }
+
+bool checkCross(vec2 e1, vec2 e2, vec2 line) {
+    double cross1 = e1.x * line.y - e1.y * line.x;
+    double cross2 = e2.x * line.y - e2.y * line.x;
+    cout << "cross1 = " << cross1 << " cross2 = " << cross2 << endl;
+    return cross1 * cross2 < 0;
+}
+
 
 
 
@@ -112,18 +127,76 @@ int main () {
 
     unordered_set<Point*, PointHash, PointComp> criticals;
     for (int i = 0; i < n; i++) {
-        points[i].prev = &points[(i-1) % n];
-        points[i].next = &points[(i+1) % n];
+        points[i].prev = &points[(i+n-1) % n];
+        points[i].next = &points[(i+n+1) % n];
+        cout << "(" << points[i].prev->v.x << "," << points[i].prev->v.y << ")" << endl;
         criticals.insert(&points[i]);
     }
 
+    double maxLen = 0.0;
     for (int i = 0; i < n; i++) {
-        for (int j = i; j < n; j++) {
-            vector<vec2> intersections = allIntersection(points[i], points[j], criticals, &points[i]);
+        for (int j = i + 1; j < n; j++) {
+            vector<Point*> pIntersection;
+            vector<vec2> intersections = allIntersection(points[i], points[j], &points[i]);
             for (int k = 0; k < intersections.size(); k++) {
+                Point temp(intersections[k].x, intersections[k].y);
+                if (criticals.count(&temp) == 0) {
+                    temp.critical = true;
+                    pIntersection.push_back(new Point(temp));
+                    cout << temp.v.x << " " << temp.v.y << endl;
+                } else {
+                    vec2 line = points[i].v - points[j].v;
+                    Point* pt = *criticals.find(&temp);
+                    if (k < intersections.size() - 1 && intersections[k+1] == intersections[k]) {
+                        vec2 e1 = pt->next->v - pt->v;
+                        vec2 e2 = pt->prev->v - pt->v;
 
+                        //cout << "p = (" << pt->v.x << "," << pt->v.y << ")" << endl;
+                        // << "prev = (" << pt->prev->v.x << "," << pt->prev->v.y << ")" << endl;
+                        //cout << "next = (" << pt->next->v.x << "," << pt->next->v.y << ")" << endl;
+                        if (checkCross(e1, e2, line)) {
+                            temp.critical = true;
+                            pIntersection.push_back(new Point(temp));
+                            cout << temp.v.x << " " << temp.v.y << endl;
+                        }
+                    } else if (k < intersections.size() - 1) {
+                        vec2 e1(0, 0);
+                        vec2 e2(0, 0);
+                        if (intersections[k+1] == pt->next->v) {
+                            e1 = pt->next->next->v - pt->next->v;
+                            e2 = pt->prev->v - pt->v;
+                        } else if (intersections[k+1] == pt->prev->v){
+                            e1 = pt->prev->prev->v - pt->prev->v;
+                            e2 = pt->next->v - pt->v;
+                        }
+                        if (checkCross(e1, e2, line)) {
+
+                        }
+                    }
+                    k++;
+                }
+            }
+            cout << "----" << endl;
+
+            double len = 0.0;
+            bool isInside = false;
+            for (int i = 0; i < pIntersection.size(); i++) {
+                if (isInside && i > 0) {
+                    len += (pIntersection[i]->v - pIntersection[i-1]->v).length();
+                    maxLen = max(maxLen, len);
+                }
+                if (pIntersection[i]->critical) {
+                    isInside = !isInside;
+                }
+                if (!isInside) {
+                    len = 0;
+                }
             }
         }
     }
+
+
+    cout.precision(9);
+    cout << maxLen;
 
 }
