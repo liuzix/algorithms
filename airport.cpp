@@ -83,8 +83,9 @@ vector<vec2> allIntersection(Point p1, Point p2,
                               unordered_set<Point*, PointHash, PointComp>& criticals,
                               Point* start) {
     vector<vec2> ret;
-    Point* cur = start;
+    Point* cur = nullptr;
     while (cur != start) {
+        if (!cur) cur = start;
         vec2 ipoint = intersection(p1.v, p2.v, cur->v, cur->next->v);
         if (!ipoint.isInf() && isBetween(cur->v, cur->next->v, ipoint)) {
             ret.push_back(ipoint);
@@ -105,14 +106,24 @@ int main () {
     vector<Point> points;
     for (int i = 0; i < n; i++) {
         int x, y;
+        cin >> x >> y;
         points.emplace_back(x, y);
     }
 
+    unordered_set<Point*, PointHash, PointComp> criticals;
     for (int i = 0; i < n; i++) {
         points[i].prev = &points[(i-1) % n];
         points[i].next = &points[(i+1) % n];
+        criticals.insert(&points[i]);
     }
 
-    unordered_set<Point*, PointHash, PointComp> criticals;
+    for (int i = 0; i < n; i++) {
+        for (int j = i; j < n; j++) {
+            vector<vec2> intersections = allIntersection(points[i], points[j], criticals, &points[i]);
+            for (int k = 0; k < intersections.size(); k++) {
+
+            }
+        }
+    }
 
 }
