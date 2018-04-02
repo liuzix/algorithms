@@ -10,11 +10,33 @@ using namespace std;
 
 struct Node {
     vector<Node*> neighbors;
-    Node* match;
+    Node* match = nullptr;
 };
 
 bool augmentPath(Node* start, unordered_set<Node*>& visited) {
-    
+    if (visited.count(start) > 0) return false;
+    visited.insert(start);
+
+    for (Node* v: start->neighbors) {
+        if (visited.count(v) > 0) {
+            continue;
+        } else {
+            visited.insert(v);
+        }
+        if (!v->match) {
+            start->match = v;
+            v->match = start;
+            return true;
+        } else {
+            if (augmentPath(v->match, visited)) {
+                v->match = start;
+                start->match = v;
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 int maxMatch(vector<pair<int, int>>& edges) {
@@ -29,9 +51,11 @@ int maxMatch(vector<pair<int, int>>& edges) {
     }
 
     unordered_set<Node*> visited;
-    bool pathFound = false;
+    bool pathFound;
     do {
-        for (auto p: lhs) {
+        pathFound = false;
+        for (auto& p: lhs) {
+            if (p.second.match) continue;
             if (augmentPath(&p.second, visited)) {
                 pathFound = true;
             }
@@ -94,7 +118,8 @@ int main () {
     int initTotal = 0;
     vector<int> rowMax(r);
     vector<int> colMax(c);
-    set<int> maxes;
+    set<int, greater<int>> maxes;
+    int sum = 0;
     for (int i = 0; i < r; i++) {
         int rmax = 0;
         for (int j = 0; j < c; j++) {
@@ -103,6 +128,7 @@ int main () {
             grid[i][j] = temp;
             initTotal += temp;
             rmax = max(rmax, temp);
+            if (temp != 0) sum ++;
         }
         rowMax[i] = rmax;
         maxes.insert(rmax);
@@ -116,6 +142,17 @@ int main () {
         colMax[i] = cmax;
         maxes.insert(cmax);
     }
+
+    for (int h: maxes) {
+        if (h > 1) {
+            int hc = hcount(grid, rowMax, colMax, h);
+            //cout << "height = " << h << ", count = " <<  hc << endl;
+            sum += hc * (h-1);
+        }
+    }
+
+    cout << initTotal - sum << endl;
+
 
     return 0;
 
