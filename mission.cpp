@@ -52,16 +52,17 @@ int maxMatch(vector<pair<int, int>>& edges) {
 
     unordered_set<Node*> visited;
     bool pathFound;
-    do {
+    //do {
         pathFound = false;
         for (auto& p: lhs) {
             if (p.second.match) continue;
             if (augmentPath(&p.second, visited)) {
                 pathFound = true;
             }
+            visited.clear();
         }
-        visited.clear();
-    } while (pathFound);
+
+    //} while (pathFound);
 
     int matchCount = 0;
     for (auto p: lhs) {
@@ -115,11 +116,11 @@ int main () {
     int r, c;
     cin >> r >> c;
     vector<vector<int>> grid(r, vector<int>(c));
-    int initTotal = 0;
+    long long initTotal = 0;
     vector<int> rowMax(r);
     vector<int> colMax(c);
     set<int, greater<int>> maxes;
-    int sum = 0;
+    long long sum = 0;
     for (int i = 0; i < r; i++) {
         int rmax = 0;
         for (int j = 0; j < c; j++) {
@@ -134,6 +135,8 @@ int main () {
         maxes.insert(rmax);
     }
 
+    //cout << "initial = " << initTotal << endl;
+
     for (int i = 0; i < c; i++) {
         int cmax = 0;
         for (int j = 0; j < r; j++) {
@@ -143,14 +146,15 @@ int main () {
         maxes.insert(cmax);
     }
 
-    for (int h: maxes) {
+    for (long long h: maxes) {
         if (h > 1) {
             int hc = hcount(grid, rowMax, colMax, h);
             //cout << "height = " << h << ", count = " <<  hc << endl;
-            sum += hc * (h-1);
+            sum += (long long)hc * (h - 1L);
         }
     }
 
+    //cout << "sum = " << sum << endl;
     cout << initTotal - sum << endl;
 
 
